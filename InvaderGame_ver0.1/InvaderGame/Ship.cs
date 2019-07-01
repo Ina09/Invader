@@ -101,8 +101,8 @@ namespace InvaderGame
         /// </summary>
         private void Draw()
         {
-            Console.SetCursorPosition(xPos + 2, yPos);
-            Console.Write("▲");
+            Console.SetCursorPosition(xPos, yPos);
+            Console.Write("　▲");
             Console.SetCursorPosition(xPos, yPos + 1);
             Console.Write("■■■");
             //Console.SetCursorPosition(0, 2);
@@ -115,7 +115,6 @@ namespace InvaderGame
         /// <param name="y">y座標</param>
         private void Erase(int x, int y)
         {
-            //Console.SetCursorPosition(x + 2, y);
             Console.SetCursorPosition(x, y);
             Console.Write("　　　");
             Console.SetCursorPosition(x, y + 1);
