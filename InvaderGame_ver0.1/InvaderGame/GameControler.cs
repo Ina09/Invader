@@ -174,7 +174,7 @@ namespace InvaderGame
             lock (gameCharacters)
             {
                 Move();
-                //ShotEnemyBullet();
+                ShotEnemyBullet();
                 GoNextStage();
                 ShowTotalScore();
             }
