@@ -77,7 +77,7 @@ namespace InvaderGame
             }
             
             var index = (Console.WindowWidth * (yPos + 1) + xPos) / 2;
-            if (ch.GetIndex() == index || ch.GetIndex() == index + 2)
+            if (ch.GetIndex() == index || ch.GetIndex() == index + 1 || ch.GetIndex() == index + 2)
             {
                 ch.ReduceHitPoint(1);
                 return true;
