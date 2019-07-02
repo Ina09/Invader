@@ -68,20 +68,16 @@ namespace InvaderGame
         /// <summary>
         /// 当たり判定
         /// </summary>
-        /// <param name="ch">判定するキャラクタ</param>
+        /// <param name="hitTestArray">当たり判定用配列</param>
         /// <returns>true:当たった、false:当たっていない</returns>
-        public bool HitTest(GameCharacter ch)
+        public bool HitTest(GameCharacter[] hitTestArray)
         {
-            if (ch.GetIndex() == ((Console.WindowWidth * yPos + xPos + 2) / 2))
+            var triangleIndex = (Console.WindowWidth * yPos + xPos + 2) / 2;
+            var squareIndex = (Console.WindowWidth * (yPos + 1) + xPos) / 2;
+
+            if (hitTestArray[triangleIndex] != null ||
+                hitTestArray[squareIndex] != null || hitTestArray[squareIndex + 1] != null || hitTestArray[squareIndex + 2] != null)
             {
-                ch.ReduceHitPoint(1);
-                return true;
-            }
-            
-            var index = (Console.WindowWidth * (yPos + 1) + xPos) / 2;
-            if (ch.GetIndex() == index || ch.GetIndex() == index + 1 || ch.GetIndex() == index + 2)
-            {
-                ch.ReduceHitPoint(1);
                 return true;
             }
             return false;

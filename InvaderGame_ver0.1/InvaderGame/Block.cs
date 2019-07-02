@@ -32,7 +32,7 @@ namespace InvaderGame
         /// 当たり判定
         /// </summary>
         /// <param name="ch">判定するキャラクタのインスタンス</param>
-        public override void HitTest(GameCharacter ch)
+        public override void UpdateHitPoint(GameCharacter ch)
         {
             Erase(xPos, yPos);
             hitPoint -= ch.AttackPower;

@@ -33,10 +33,10 @@ namespace InvaderGame
         public abstract void Move();
 
         /// <summary>
-        /// 当たり判定
+        /// ヒットポイントの更新を行う
         /// </summary>
-        /// <param name="ch">判定するキャラクタのインスタンス</param>
-        public abstract void HitTest(GameCharacter ch);
+        /// <param name="ch">当たった相手のキャラクタ</param>
+        public abstract void UpdateHitPoint(GameCharacter ch);
 
         /// <summary>
         /// 弾を撃つ処理
@@ -89,7 +89,7 @@ namespace InvaderGame
         /// キャラクタのヒットポイントが残っているか
         /// </summary>
         /// <returns>true:残っている、false:残っていない</returns>
-        public bool IsLived()
+        public bool IsAlive()
         {
             if (hitPoint <= 0)
             {
@@ -124,7 +124,6 @@ namespace InvaderGame
         {
             Console.SetCursorPosition(xPos, yPos);
             Console.Write(drawCharacter);
-           // Console.SetCursorPosition(0, 2);
         }
 
         /// <summary>
@@ -136,7 +135,6 @@ namespace InvaderGame
         {
             Console.SetCursorPosition(x, y);
             Console.Write("　");
-            //Console.SetCursorPosition(0, 2);
         }
     }
 }

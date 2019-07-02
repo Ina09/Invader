@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Timers;
@@ -18,9 +19,9 @@ namespace InvaderGame
         private bool isGameOver;
         private Ship ship;
         private GameCharacter shipBullet;
-        private int moveSpeed = 36;
-        private int shotBulletInterval;
+        private int moveSpeed = 30;
         private bool changeSpeed = false;
+        private int shotBulletInterval;
         GameCharacter[] hitTestArray; // 当たり判定用配列
 
         /// <summary>
@@ -36,12 +37,12 @@ namespace InvaderGame
             InitializeCharacters();
 
             // キーボードでのShipの操作を受け付ける
-            Thread shipEventThread = new Thread(new ThreadStart(ShipEvent));
+            Thread shipEventThread = new Thread(new ThreadStart(RunShipEvent));
             shipEventThread.Start();
 
             // 操作と無関係のイベントを定期的に起こす
             autoEventThread = new System.Timers.Timer(32);
-            autoEventThread.Elapsed += new ElapsedEventHandler(AutoEvent);
+            autoEventThread.Elapsed += new ElapsedEventHandler(RunAutoEvent);
             autoEventThread.Start();            
         }
 
@@ -108,22 +109,33 @@ namespace InvaderGame
         /// <summary>
         /// 自機の移動、自弾の発射の処理を行う
         /// </summary>
-        private  void ShipEvent()
+        private  void RunShipEvent()
         {
             while (!isGameOver)
             {
                 lock (ship)
                 {
                     if (!Console.KeyAvailable) { continue; }
+                    if (isGameOver) { break; }
 
                     var key = Console.ReadKey(true).Key;
                     switch (key)
                     {
                         case ConsoleKey.LeftArrow:
                             ship.MoveLeft();
+                            if (ship.HitTest(hitTestArray))
+                            {
+                                isGameOver = true;
+                                break;
+                            }
                             continue;
                         case ConsoleKey.RightArrow:
                             ship.MoveRight();
+                            if (ship.HitTest(hitTestArray))
+                            {
+                                isGameOver = true;
+                                break;
+                            }
                             continue;
                         case ConsoleKey.Spacebar:
                             if (shipBullet != null) { break; ; }
@@ -132,7 +144,7 @@ namespace InvaderGame
                             // 弾を作成した位置に敵・敵弾があった場合は対消滅させる
                             if (hitTestArray[shipBullet.GetIndex()] != null)
                             {
-                                hitTestArray[shipBullet.GetIndex()].HitTest(shipBullet);
+                                hitTestArray[shipBullet.GetIndex()].UpdateHitPoint(shipBullet);
                                 shipBullet = null;
                                 continue; ;
                             }
@@ -140,7 +152,7 @@ namespace InvaderGame
                             continue;
                         case ConsoleKey.Enter:
                             isGameOver = true;
-                            continue;
+                            break;
                     }
                 }
             }
@@ -169,12 +181,12 @@ namespace InvaderGame
         /// </summary>
         /// <param name="sender">イベントの発生元</param>
         /// <param name="e">発生したイベントのデータ</param>
-        private  void AutoEvent(object sender, ElapsedEventArgs e)
+        private  void RunAutoEvent(object sender, ElapsedEventArgs e)
         {
             lock (gameCharacters)
             {
                 Move();
-                ShotEnemyBullet();
+                ShotEnemyBullets();
                 GoNextStage();
                 ShowTotalScore();
             }
@@ -185,12 +197,21 @@ namespace InvaderGame
         /// </summary>
         private void Move()
         {
+            if (isGameOver) { return; }
+
             lock (ship)
             {
                 MoveCharacterExceptShip();
                 CountScore();
 
                 // 自機の当たり判定
+                if (ship.HitTest(hitTestArray))
+                {
+                    isGameOver = true;
+                    return;
+                }
+
+                // 敵が最下段に来ているか判定
                 foreach (var ch in gameCharacters)
                 {
                     //Shipの先端より上にいるキャラクタは判定しない
@@ -198,12 +219,6 @@ namespace InvaderGame
 
                     //敵がShipの先端と同じ段に来たらゲームオーバー
                     if (ch.Score != 0 && ch.Score != 300)
-                    {
-                        isGameOver = true;
-                        return;
-                    }
-                    // Shipと当たったらゲームオーバー
-                    if (ship.HitTest(ch))
                     {
                         isGameOver = true;
                         return;
@@ -221,42 +236,59 @@ namespace InvaderGame
         {
             foreach (var ch in gameCharacters)
             {
+                // 速度変更が必要な場合はキャラクタの移動速度を変える
                 if (changeSpeed) { ch.ChangeSpeed(CalcMoveSpeed()); }
+
                 // 移動前のindexの配列の中身を消す
                 hitTestArray[ch.GetIndex()] = null;
 
                 ch.Move();
 
-                if (!ch.IsLived()) { continue; }
+                if (!ch.IsAlive()) { continue; }
 
-                // 当たり判定
-                var checkChara = hitTestArray[ch.GetIndex()];
-                if (checkChara == null)
-                {
-                    hitTestArray[ch.GetIndex()] = ch;
-                    continue;
-                }
-                else
-                {
-                    checkChara.HitTest(ch);
-                    if (!checkChara.IsLived())
-                    {
-                        hitTestArray[ch.GetIndex()] = null;
-                    }
-                    if (ch.IsLived())
-                    {
-                        hitTestArray[ch.GetIndex()] = ch;
-                    }
-
-                    if (hitTestArray[ch.GetIndex()] != null) { hitTestArray[ch.GetIndex()].UpdateDrawing(); }
-                }
+                HitTest(ch);
             }
 
             // 画面にShipの弾は一つだけ
-            if (shipBullet != null && !shipBullet.IsLived())
+            if (shipBullet != null && !shipBullet.IsAlive())
             {
                 shipBullet = null;
             }
+        }
+
+        /// <summary>
+        /// 当たり判定を行う
+        /// </summary>
+        /// <param name="ch">当たり判定を行うキャラクタ</param>
+        private void HitTest(GameCharacter ch)
+        {
+            // 当たり判定
+            var checkChara = hitTestArray[ch.GetIndex()];
+            
+            // 何にも当たっていなかった場合
+            if (checkChara == null)
+            {
+                hitTestArray[ch.GetIndex()] = ch;
+                return;
+            }
+
+            // 当たっていた場合
+            checkChara.UpdateHitPoint(ch);
+
+            // もともとindexの位置にあったキャラクタ
+            if (!checkChara.IsAlive())
+            {
+                hitTestArray[ch.GetIndex()] = null;
+            }
+
+            // 当たり判定対象のキャラクタ
+            if (ch.IsAlive())
+            {
+                hitTestArray[ch.GetIndex()] = ch;
+            }
+
+            // indexの位置のキャラクタのHPが残っていた場合、同じ位置に描画しなおす
+            if (hitTestArray[ch.GetIndex()] != null) { hitTestArray[ch.GetIndex()].UpdateDrawing(); }
         }
 
         /// <summary>
@@ -268,7 +300,7 @@ namespace InvaderGame
             // リストのうちHP = 0になったもののスコアをカウントする
             for (int i = 0; i < gameCharacters.Count; i++)
             {
-                if (gameCharacters[i].IsLived()) { continue; }
+                if (gameCharacters[i].IsAlive()) { continue; }
                 // リストから削除するインスタンス
                 var deletech = gameCharacters[i];
                 gameCharacters.Remove(gameCharacters[i]);
@@ -281,7 +313,7 @@ namespace InvaderGame
 
                 // 同列の一番下の敵が弾を撃てるようにする
                 var width = Console.WindowWidth / 2;
-                var newLowChara = gameCharacters.FindLast(ch => ch.IsLived() && (ch.GetIndex() < deletech.GetIndex()) && (ch.GetIndex() % width == deletech.GetIndex() % width));
+                var newLowChara = gameCharacters.FindLast(ch => ch.IsAlive() && (ch.GetIndex() < deletech.GetIndex()) && (ch.GetIndex() % width == deletech.GetIndex() % width));
                 if (newLowChara != null) { newLowChara.IsBottom = true; }
             }
 
@@ -330,7 +362,7 @@ namespace InvaderGame
         /// <summary>
         /// 敵の弾を撃つ
         /// </summary>
-        private void ShotEnemyBullet()
+        private void ShotEnemyBullets()
         {
             if (isGameOver) { return; }
 
@@ -360,7 +392,6 @@ namespace InvaderGame
                 }
                 shotBulletInterval = moveSpeed / 2;
             }
-                
         }
 
         /// <summary>
