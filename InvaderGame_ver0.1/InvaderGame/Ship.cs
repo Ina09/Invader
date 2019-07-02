@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace InvaderGame
 {
@@ -11,8 +7,9 @@ namespace InvaderGame
     /// </summary>
     class Ship
     {
-        private int xPos;
-        private int yPos;
+        // 要変更
+        public int xPos;
+        public int yPos;
 
         /// <summary>
         /// 自機の作成
@@ -118,6 +115,12 @@ namespace InvaderGame
             Console.SetCursorPosition(x, y + 1);
             Console.Write("　　　");
             //Console.SetCursorPosition(0, 2);
+        }
+
+        // 要消去
+        public void UpdateDrawing()
+        {
+            UpdateDrawing(xPos, yPos);
         }
     }
 }

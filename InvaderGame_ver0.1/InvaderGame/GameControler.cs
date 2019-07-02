@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Timers;
@@ -129,6 +128,7 @@ namespace InvaderGame
                                 break;
                             }
                             continue;
+
                         case ConsoleKey.RightArrow:
                             ship.MoveRight();
                             if (ship.HitTest(hitTestArray))
@@ -137,6 +137,7 @@ namespace InvaderGame
                                 break;
                             }
                             continue;
+
                         case ConsoleKey.Spacebar:
                             if (shipBullet != null) { break; ; }
                             shipBullet = ship.ShotBullet();
@@ -150,9 +151,6 @@ namespace InvaderGame
                             }
                             gameCharacters.Add(shipBullet);
                             continue;
-                        case ConsoleKey.Enter:
-                            isGameOver = true;
-                            break;
                     }
                 }
             }

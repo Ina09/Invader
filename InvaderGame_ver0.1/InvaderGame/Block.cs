@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace InvaderGame
+﻿namespace InvaderGame
 {
     /// <summary>
     /// 防御用のブロックに関する処理を定義
