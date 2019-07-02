@@ -35,6 +35,7 @@ namespace InvaderGame
             if (xPos < 0)
             {
                 xPos = 0;
+                return;
             }
             UpdateDrawing(beforeXPos, yPos);
         }
@@ -50,6 +51,7 @@ namespace InvaderGame
             if (xPos > 60)
             {
                 xPos = 60;
+                return;
             }
             UpdateDrawing(beforeXPos, yPos);
         }
@@ -102,7 +104,7 @@ namespace InvaderGame
         private void Draw()
         {
             Console.SetCursorPosition(xPos, yPos);
-            Console.Write("　▲");
+            Console.Write("　▲　");
             Console.SetCursorPosition(xPos, yPos + 1);
             Console.Write("■■■");
             //Console.SetCursorPosition(0, 2);

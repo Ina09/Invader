@@ -139,7 +139,7 @@ namespace InvaderGame
             }
 
             // 画面の一番下の行に来たら撃たない
-            if (yPos >= 24){ return null; }
+            if (yPos >= Console.WindowHeight - 2){ return null; }
 
             return new EnemyBullet(xPos, yPos + 2);
         }

@@ -146,7 +146,7 @@ namespace InvaderGame
             }
             
             // ゲームオーバー後の処理
-            while (true)
+            while (isGameOver)
             {
                 if (!Console.KeyAvailable) { continue; }
                 var key = Console.ReadKey().Key;
@@ -187,6 +187,9 @@ namespace InvaderGame
         {
             lock (ship)
             {
+                MoveCharacterExceptShip();
+                CountScore();
+
                 // 自機の当たり判定
                 foreach (var ch in gameCharacters)
                 {
@@ -206,9 +209,6 @@ namespace InvaderGame
                         return;
                     }
                 }
-
-                MoveCharacterExceptShip();
-                CountScore();
 
                 CheckNecessityOfChangeSpeed();
             }
@@ -332,36 +332,44 @@ namespace InvaderGame
         /// </summary>
         private void ShotEnemyBullet()
         {
+            if (isGameOver) { return; }
+
             if (shotBulletInterval > 0)
             {
                 shotBulletInterval--;
                 return;
             }
 
-            var listx = gameCharacters.OrderBy(i => Guid.NewGuid()).Take(10).ToList();
-            foreach (var ch in listx)
+            lock (ship)
             {
-                var bullet = ch.ShotBullet();
-                // 打たれなかった場合
-                if (bullet == null) { continue; }
-
-                if (hitTestArray[bullet.GetIndex()] != null)
+                var listx = gameCharacters.OrderBy(i => Guid.NewGuid()).Take(15).ToList();
+                foreach (var ch in listx)
                 {
-                    hitTestArray[bullet.GetIndex()].UpdateDrawing();
-                    continue;
-                }
+                    var bullet = ch.ShotBullet();
+                    // 打たれなかった場合
+                    if (bullet == null) { continue; }
 
-                gameCharacters.Add(bullet);
-                break;
+                    if (hitTestArray[bullet.GetIndex()] != null)
+                    {
+                        hitTestArray[bullet.GetIndex()].UpdateDrawing();
+                        continue;
+                    }
+
+                    gameCharacters.Add(bullet);
+                    break;
+                }
+                shotBulletInterval = moveSpeed / 2;
             }
-            shotBulletInterval = moveSpeed / 2;
+                
         }
 
         /// <summary>
         /// 次のステージに進む
         /// </summary>
         private void GoNextStage()
-        {            
+        {
+            if (isGameOver) { return; }
+
             foreach (var ch in gameCharacters)
             {
                 if (ch.Score != 0 && ch.Score != 300)
