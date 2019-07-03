@@ -159,7 +159,7 @@ namespace InvaderGame
             while (isGameOver)
             {
                 if (!Console.KeyAvailable) { continue; }
-                var key = Console.ReadKey().Key;
+                var key = Console.ReadKey(true).Key;
 
                 switch (key)
                 {
